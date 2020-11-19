@@ -10,11 +10,13 @@ pipeline {
     stages {
 
         stage("Build") {
+				// Calls the function buildApp()
             steps { buildApp() }
 		}
 
         stage("Deploy - Dev") {
-            steps { deploy('dev') }
+				// Calls the function deploy() with an argument 'dev'
+			steps { deploy('dev') }
 		}
 
 	}
@@ -23,28 +25,43 @@ pipeline {
 
 // steps
 def buildApp() {
+		// Navigates the the section where the dockerfile is stored
 	dir ('section_4/code/cd_pipeline' ) {
+			// Runs the docker build command to build an image with a name and a number suffix.
+			// BUILD_NUMBER is an environment variable automatically provided by Jenkins
+			// This gives us the possibility to avoid naming conflicts 
 		def appImage = docker.build("hands-on-jenkins/myapp:${BUILD_NUMBER}")
 	}
 }
 
+	// the function deploy takes a parameter which defines the environment in the environment-variable
 def deploy(environment) {
-
+		// devenition of variables globally for the function so they can be used inside and ouside
+		// of the if statment
 	def containerName = ''
 	def port = ''
-
+		// the variable is on a strange form because this is the way to access the value in groovy
+		// The reason for doing ifs here is to add additional environments
 	if ("${environment}" == 'dev') {
+			// When the if statement is true, name and port is assigned to the variables defined aboive
 		containerName = "app_dev"
 		port = "8888"
 	} 
 	else {
+			// When the if statement is not true, we get an error message and the system exits.
+			// This will not happpen but it is a safety net
 		println "Environment not valid"
 		System.exit(0)
 	}
-
-	sh "docker ps -f name=${containerName} -q | xargs --no-run-if-empty docker stop"
-	sh "docker ps -a -f name=${containerName} -q | xargs -r docker rm"
-	sh "docker run -d -p ${port}:5000 --name ${containerName} hands-on-jenkins/myapp:${BUILD_NUMBER}"
+		// When we run the pipeline the first time everything will work, but the second time
+		// will need some house cleaning becuase the container already exists
+		// You cannot have the same container with the same name running on the same port.
+		// The first command tries to find the container and if it exists it stops it
+	bat "docker ps -f name=${containerName} -q | xargs --no-run-if-empty docker stop"
+		// After the container is stopped it will be removed/deleted
+	bat "docker ps -a -f name=${containerName} -q | xargs -r docker rm"
+		// We now have a clean environment and we can start the new container
+	bat "docker run -d -p ${port}:5000 --name ${containerName} hands-on-jenkins/myapp:${BUILD_NUMBER}"
 
 }
 
