@@ -57,11 +57,11 @@ def deploy(environment) {
 		// will need some house cleaning becuase the container already exists
 		// You cannot have the same container with the same name running on the same port.
 		// The first command tries to find the container and if it exists it stops it
-	bat "docker ps -f name=${containerName} -q | xargs --no-run-if-empty docker stop"
+	sh "docker ps -f name=${containerName} -q | xargs --no-run-if-empty docker stop"
 		// After the container is stopped it will be removed/deleted
-	bat "docker ps -a -f name=${containerName} -q | xargs -r docker rm"
+	sh "docker ps -a -f name=${containerName} -q | xargs -r docker rm"
 		// We now have a clean environment and we can start the new container
-	bat "docker run -d -p ${port}:5000 --name ${containerName} hands-on-jenkins/myapp:${BUILD_NUMBER}"
+	sh "docker run -d -p ${port}:5000 --name ${containerName} hands-on-jenkins/myapp:${BUILD_NUMBER}"
 
 }
 
