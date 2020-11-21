@@ -3,6 +3,7 @@
 pipeline {
     agent any
 
+// This section disables the possibility to have concurrent prosesses towards the same resources
     options {
         disableConcurrentBuilds()
     }
